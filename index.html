@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bill Generator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Bill Generator</h1>
+
+      <!-- Form for invoice -->
+      <form id="bill-form">
+        <label for="invoiceNo">Invoice No:</label>
+        <input type="text" id="invoiceNo" required />
+
+        <label for="patientName">Patient Name:</label>
+        <input type="text" id="patientName" required />
+
+        <label for="patientAge">Patient Age:</label>
+        <input type="number" id="patientAge" required />
+
+        <label for="patientGender">Patient Gender:</label>
+        <select id="patientGender" required>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label for="noOfProducts">No. of Products:</label>
+        <input type="number" id="noOfProducts" required />
+        <button type="button" onclick="addProducts()">Add Products</button>
+
+        <!-- Dynamic Product Inputs -->
+        <div id="product-inputs"></div>
+
+        <button type="submit">Generate Invoice</button>
+      </form>
+
+      <!-- Invoice display -->
+      <div id="bill-display"></div>
+
+      <!-- Download button -->
+      <button id="downloadPdf" style="display: none">
+        Download Invoice PDF
+      </button>
+    </div>
+
+    <!-- Include jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
