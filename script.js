@@ -12,10 +12,13 @@ function addProducts() {
         <input type="text" id="productName${i}" required>
 
         <label for="mrp${i}">MRP:</label>
-        <input type="number" id="mrp${i}" required>
+        <input type="number" id="mrp${i}" step="any" required>
 
         <label for="discount${i}">Discount (%):</label>
-        <input type="number" id="discount${i}" required>
+        <input type="number" id="discount${i}" step="any" required>
+
+        <label for="quantity${i}">Quantity:</label>
+        <input type="number" id="quantity${i}" required>
       </div>
     `;
     productInputs.innerHTML += productForm;
@@ -27,7 +30,7 @@ function calculateTotal(productDetails) {
     const discountedPrice =
       product.mrp - (product.mrp * product.discount) / 100;
     const gstPrice = discountedPrice * 1.12; // Adding 6% CGST + 6% SGST
-    return total + gstPrice;
+    return total + gstPrice * product.quantity;
   }, 0);
 }
 
@@ -45,13 +48,20 @@ document.getElementById("bill-form").addEventListener("submit", (e) => {
     const name = document.getElementById(`productName${i}`).value;
     const mrp = parseFloat(document.getElementById(`mrp${i}`).value);
     const discount = parseFloat(document.getElementById(`discount${i}`).value);
+    const quantity = parseInt(document.getElementById(`quantity${i}`).value);
 
-    if (!name || isNaN(mrp) || isNaN(discount)) {
+    if (
+      !name ||
+      isNaN(mrp) ||
+      isNaN(discount) ||
+      isNaN(quantity) ||
+      quantity <= 0
+    ) {
       alert("Please fill all product details correctly.");
       return;
     }
 
-    productDetails.push({ name, mrp, discount });
+    productDetails.push({ name, mrp, discount, quantity });
   }
 
   const total = Math.round(calculateTotal(productDetails));
@@ -61,10 +71,12 @@ document.getElementById("bill-form").addEventListener("submit", (e) => {
     <p><strong>Invoice No:</strong> ${invoiceNo}</p>
     <p><strong>Date:</strong> ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}</p>
     <p><strong>Patient:</strong> ${patientName} <br/> <strong>Age:</strong> ${patientAge}, <strong>Gender:</strong> ${patientGender}</p>
-    <table>
+    <table border="1">
       <thead>
         <tr>
+          <th>Sl. No.</th>
           <th>Product</th>
+          <th>Quantity</th>
           <th>MRP</th>
           <th>Discount</th>
           <th>CGST + SGST</th>
@@ -74,17 +86,21 @@ document.getElementById("bill-form").addEventListener("submit", (e) => {
       <tbody>
   `;
 
-  productDetails.forEach((product) => {
+  productDetails.forEach((product, index) => {
     const discountedPrice =
       product.mrp - (product.mrp * product.discount) / 100;
     const gstPrice = discountedPrice * 1.12; // Adding 12% GST
+    const totalProductPrice = gstPrice * product.quantity;
+
     billHTML += `
       <tr>
+        <td>${index + 1}</td>
         <td>${product.name}</td>
+        <td>${product.quantity}</td>
         <td>${product.mrp.toFixed(2)}</td>
         <td>${product.discount.toFixed(2)}%</td>
         <td>${(gstPrice - discountedPrice).toFixed(2)}</td>
-        <td>${gstPrice.toFixed(2)}</td>
+        <td>${totalProductPrice.toFixed(2)}</td>
       </tr>
     `;
   });
@@ -107,24 +123,20 @@ document.getElementById("bill-form").addEventListener("submit", (e) => {
     doc.fromHTML(billHTML, 10, 10);
     doc.save(`${invoiceNo}_bill.pdf`);
   };
-  // Download button onclick event
+
   document.getElementById("downloadPdf").onclick = function () {
-    const invoiceContent = document.getElementById("bill-display"); // Target HTML content
-
-    // Use html2canvas to capture HTML content
+    const invoiceContent = document.getElementById("bill-display");
     html2canvas(invoiceContent).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png"); // Convert to image
-      const doc = new jspdf.jsPDF(); // Initialize jsPDF object
-
-      // Add image to the PDF
-      const imgWidth = 190; // Full-width of PDF page
-      const pageHeight = 297; // A4 Page height
+      const imgData = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf; // Correctly import jsPDF
+      const doc = new jsPDF();
+      const imgWidth = 190;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Handle multiple pages (if necessary)
       doc.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
 
@@ -135,8 +147,6 @@ document.getElementById("bill-form").addEventListener("submit", (e) => {
         heightLeft -= pageHeight;
       }
 
-      // Save as PDF
-      const invoiceNo = document.getElementById("invoiceNo").value || "invoice";
       doc.save(`${invoiceNo}_bill.pdf`);
     });
   };
